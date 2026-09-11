@@ -70,6 +70,25 @@ php artisan serve
 
 API base URL: `http://localhost:8000/api`
 
+## Admin panel (Filament)
+
+EventFlow includes a web admin UI powered by [Filament](https://filamentphp.com).
+
+```
+http://localhost:8000/admin
+```
+
+Log in with any **Tenant Admin**, **Manager**, or **Super Admin** seeded user (password: `password`). Customers cannot access the panel.
+
+| Role | Admin access |
+| --- | --- |
+| Super Admin | Tenants + view all tenant data |
+| Tenant Admin | Events, products, orders, users |
+| Manager | Events, products (view), orders |
+| Customer | No access |
+
+> **Note:** Enable the PHP `intl` extension if Filament reports it as missing (`php -m | grep intl`).
+
 ## Queue worker
 
 Notifications and background jobs use the database queue. Run a worker alongside the app:
