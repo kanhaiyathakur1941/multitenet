@@ -87,7 +87,16 @@ Log in with any **Tenant Admin**, **Manager**, or **Super Admin** seeded user (p
 | Manager | Events, products (view), orders |
 | Customer | No access |
 
-> **Note:** Enable the PHP `intl` extension if Filament reports it as missing (`php -m | grep intl`).
+> **PHP `intl` required:** XAMPP’s default PHP does **not** include `intl`, which Filament needs. Use **Homebrew PHP** to run the app:
+>
+> ```bash
+> brew install php@8.2
+> export PATH="/opt/homebrew/opt/php@8.2/bin:$PATH"   # Intel Mac: /usr/local/opt/php@8.2/bin
+> php -m | grep intl                                # should print: intl
+> php artisan serve
+> ```
+>
+> Keep using **XAMPP MySQL** for the database; only switch the `php` command used for Artisan.
 
 ## Queue worker
 

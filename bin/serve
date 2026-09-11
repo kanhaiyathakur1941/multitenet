@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [ -x "/opt/homebrew/opt/php@8.2/bin/php" ]; then
+    PHP_BIN="/opt/homebrew/opt/php@8.2/bin/php"
+elif [ -x "/usr/local/opt/php@8.2/bin/php" ]; then
+    PHP_BIN="/usr/local/opt/php@8.2/bin/php"
+else
+    PHP_BIN="php"
+fi
+
+modules=$("$PHP_BIN" -m 2>/dev/null)
+
+if ! grep -qFx intl <<< "$modules"; then
+    echo "The PHP intl extension is required for Filament."
+    echo "Install Homebrew PHP: brew install php@8.2"
+    echo "Then run: export PATH=\"/opt/homebrew/opt/php@8.2/bin:\$PATH\""
+    exit 1
+fi
+
+exec "$PHP_BIN" artisan serve "$@"

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [ -x "/opt/homebrew/opt/php@8.2/bin/php" ]; then
+    exec /opt/homebrew/opt/php@8.2/bin/php "$@"
+fi
+
+if [ -x "/usr/local/opt/php@8.2/bin/php" ]; then
+    exec /usr/local/opt/php@8.2/bin/php "$@"
+fi
+
+exec php "$@"
