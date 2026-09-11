@@ -1,16 +1,21 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "eventflow/eventflow",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "Multi-tenant Event & E-commerce SaaS API built with Laravel.",
     "keywords": [
         "laravel",
-        "framework"
+        "multi-tenant",
+        "saas",
+        "api",
+        "events",
+        "e-commerce"
     ],
     "license": "MIT",
     "require": {
         "php": "^8.2",
         "laravel/framework": "^12.0",
+        "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1"
     },
     "require-dev": {

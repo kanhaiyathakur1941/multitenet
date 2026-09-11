@@ -1,5 +1,8 @@
 *.log
 .DS_Store
+/multitenant
+/database/*.sqlite
+/database/*.sqlite-journal
 .env
 .env.backup
 .env.production
