@@ -119,6 +119,8 @@ Add these environment variables (example with [Mailtrap](https://mailtrap.io/) o
 
 Redeploy after changing variables.
 
+> **Deploy tip:** Use `php artisan migrate --force` for routine deploys. Only use `--seed` on the very first deploy when the database is empty.
+
 > **Note:** Notifications are queued. You must run a queue worker (see below) for emails to send.
 
 ---

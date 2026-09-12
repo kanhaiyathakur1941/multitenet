@@ -83,12 +83,16 @@ class DemoDataSeeder extends Seeder
             $customer = User::query()->where('email', $customerEmail)->firstOrFail();
         }
 
-        if (Event::query()->where('tenant_id', $tenant->id)->exists()) {
+        $this->seedEvents($tenant, $manager);
+        $products = $this->seedProducts($tenant);
+
+        if ($products->isEmpty()) {
             return;
         }
 
-        $this->seedEvents($tenant, $manager);
-        $products = $this->seedProducts($tenant);
+        if (Order::query()->withoutTenant()->where('tenant_id', $tenant->id)->where('user_id', $customer->id)->exists()) {
+            return;
+        }
 
         $featuredProduct = $products->first();
         $subtotal = round((float) $featuredProduct->price * 2, 2);
@@ -141,9 +145,16 @@ class DemoDataSeeder extends Seeder
         ];
 
         foreach ($events as $index => $event) {
+            if (Event::query()->withoutTenant()
+                ->where('tenant_id', $tenant->id)
+                ->where('title', $event['title'])
+                ->exists()) {
+                continue;
+            }
+
             $start = now()->addWeeks($index + 1);
 
-            Event::query()->create([
+            Event::query()->withoutTenant()->create([
                 'tenant_id' => $tenant->id,
                 'created_by' => $manager->id,
                 'title' => $event['title'],
@@ -175,16 +186,24 @@ class DemoDataSeeder extends Seeder
             ['name' => 'Pin Badge', 'price' => 3.99, 'stock' => 120],
         ];
 
-        return collect($products)->map(function (array $product, int $index) use ($tenant): Product {
-            return Product::query()->create([
-                'tenant_id' => $tenant->id,
-                'name' => $product['name'],
-                'description' => "Demo merchandise: {$product['name']}",
-                'sku' => strtoupper(Str::slug($tenant->slug, '')).str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT),
-                'price' => $product['price'],
-                'stock' => $product['stock'],
-                'status' => ProductStatus::Active,
-            ]);
+        $prefix = strtoupper(Str::slug($tenant->slug, ''));
+
+        return collect($products)->map(function (array $product, int $index) use ($tenant, $prefix): Product {
+            $sku = $prefix.str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT);
+
+            return Product::query()->withoutTenant()->firstOrCreate(
+                [
+                    'tenant_id' => $tenant->id,
+                    'sku' => $sku,
+                ],
+                [
+                    'name' => $product['name'],
+                    'description' => "Demo merchandise: {$product['name']}",
+                    'price' => $product['price'],
+                    'stock' => $product['stock'],
+                    'status' => ProductStatus::Active,
+                ],
+            );
         });
     }
 }

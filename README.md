@@ -77,6 +77,8 @@ php artisan migrate --force --seed
 php artisan migrate --force
 ```
 
+> Do **not** use `--seed` on every deploy after the first one. Seeding is only needed once when the database is empty.
+
 **Required environment variables:**
 
 | Variable | Value |
