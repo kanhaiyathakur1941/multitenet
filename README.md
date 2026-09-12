@@ -17,7 +17,7 @@ A production-style **multi-tenant Event & E-commerce SaaS** backend built with L
 
 | Layer | Choice |
 | --- | --- |
-| Language | PHP 8.2+ |
+| Language | PHP 8.3+ |
 | Framework | Laravel 12 |
 | Database | MySQL 8 |
 | Auth | Laravel Sanctum (API tokens) |
@@ -40,20 +40,60 @@ HTTP → throttle → Sanctum → tenant context → Form Request → Policy →
 
 ## Requirements
 
-- PHP 8.2+
+- PHP 8.3+ (PHP 8.4+ recommended; Laravel Cloud uses PHP 8.5 by default)
 - Composer 2
 - MySQL 8
-- Node.js 18+ (optional, for frontend assets)
+- Node.js 18+ (required for asset builds on deploy)
+
+## Laravel Cloud deployment
+
+Laravel Cloud defaults to **PHP 8.5**. This project requires `openspout/openspout` ^4.29 (PHP 8.3–8.5 compatible).
+
+**Build command:**
+
+```bash
+composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader && npm ci && npm run build
+```
+
+**Deploy command (first deploy):**
+
+```bash
+php artisan migrate --force --seed
+```
+
+**Deploy command (subsequent deploys):**
+
+```bash
+php artisan migrate --force
+```
+
+**Required environment variables:**
+
+| Variable | Value |
+| --- | --- |
+| `APP_KEY` | Generate with `php artisan key:generate --show` |
+| `APP_URL` | Your `https://*.laravel.cloud` URL |
+| `APP_ENV` | `production` |
+| `APP_DEBUG` | `false` |
+
+Attach a **Laravel MySQL** database to the environment (Cloud injects `DB_*` automatically).
+
+**PHP runtime on Cloud:** use **PHP 8.4** or **8.5** (General Settings → Runtime). Do **not** use PHP 8.2 — this project requires PHP 8.3+.
+
+**After deploy, verify:**
+
+- `https://YOUR-APP.laravel.cloud/api/health`
+- `https://YOUR-APP.laravel.cloud/admin` (login: `admin@alpha.eventflow.test` / `password`)
 
 ## Installation
 
 ```bash
-# Clone and install dependencies
-composer install
+# Clone and install dependencies (use bin/composer — NOT XAMPP php)
+./bin/composer install
 
 # Environment
 cp .env.example .env
-php artisan key:generate
+./bin/php artisan key:generate
 
 # Configure MySQL in .env
 # DB_CONNECTION=mysql
@@ -62,11 +102,13 @@ php artisan key:generate
 # DB_PASSWORD=
 
 # Database
-php artisan migrate:fresh --seed
+./bin/php artisan migrate:fresh --seed
 
-# Start the server
-php artisan serve
+# Start the server (Homebrew PHP 8.4+ with intl)
+composer serve
 ```
+
+> **Important:** Do not use XAMPP's `php` (8.2.4) for Composer or Artisan. It lacks `intl` and cannot satisfy PHP 8.3+ dependencies. Always use `./bin/php` or `./bin/composer`.
 
 API base URL: `http://localhost:8000/api`
 
@@ -87,16 +129,18 @@ Log in with any **Tenant Admin**, **Manager**, or **Super Admin** seeded user (p
 | Manager | Events, products (view), orders |
 | Customer | No access |
 
-> **PHP `intl` required:** XAMPP’s default PHP does **not** include `intl`, which Filament needs. Use **Homebrew PHP** to run the app:
+> **Use Homebrew PHP, not XAMPP PHP:** XAMPP’s `php` (8.2.4) lacks `intl` and cannot run this project. Install Homebrew PHP 8.4+ and use project wrappers:
 >
 > ```bash
-> brew install php@8.2
-> export PATH="/opt/homebrew/opt/php@8.2/bin:$PATH"   # Intel Mac: /usr/local/opt/php@8.2/bin
-> php -m | grep intl                                # should print: intl
-> php artisan serve
+> brew install php@8.4
+> ./bin/php -v          # should show 8.4.x
+> ./bin/php -m | grep intl
+> composer serve        # or: ./bin/php artisan serve
 > ```
 >
-> Keep using **XAMPP MySQL** for the database; only switch the `php` command used for Artisan.
+> For Composer: `./bin/composer install` (never plain `composer` if it points to XAMPP).
+>
+> Keep using **XAMPP MySQL** for the database only.
 
 ## Queue worker
 
