@@ -6,6 +6,7 @@ namespace App\Providers;
 
 use App\Modules\Orders\FakePaymentGateway;
 use App\Modules\Orders\PaymentGatewayInterface;
+use App\Modules\Orders\RazorpayPaymentGateway;
 use App\Shared\CurrentTenant;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
@@ -20,7 +21,14 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->scoped(CurrentTenant::class);
 
-        $this->app->bind(PaymentGatewayInterface::class, FakePaymentGateway::class);
+        $this->app->bind(PaymentGatewayInterface::class, function (): PaymentGatewayInterface {
+            $driver = config('eventflow.payments.driver', 'fake');
+
+            return match ($driver) {
+                'razorpay' => $this->app->make(RazorpayPaymentGateway::class),
+                default => $this->app->make(FakePaymentGateway::class),
+            };
+        });
     }
 
     public function boot(): void

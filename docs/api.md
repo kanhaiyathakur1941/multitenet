@@ -4,11 +4,19 @@ EventFlow is a multi-tenant Event & E-commerce SaaS backend. All endpoints are J
 
 ## Base URL
 
+**Live demo:**
+
 ```
-http://localhost/api
+https://multitenet-production-nbyekk.laravel.cloud/api
 ```
 
-Replace the host with your deployment URL in production.
+**Local development:**
+
+```
+http://localhost:8000/api
+```
+
+Client walkthrough: [demo.md](demo.md)
 
 ## Authentication
 
@@ -581,6 +589,8 @@ Prices, tax, and totals are calculated **server-side**. Tax rate defaults to **1
     "subtotal": "20.00",
     "tax": "2.00",
     "total": "22.00",
+    "payment_gateway": "fake",
+    "payment_transaction_id": "fake_550e8400-e29b-41d4-a716-446655440000",
     "user": { "id": 3, "name": "...", "email": "...", "role": {}, "tenant": {} },
     "items": [
       {
@@ -607,6 +617,13 @@ Prices, tax, and totals are calculated **server-side**. Tax rate defaults to **1
 | Payment failure | `payment` |
 
 On failure the entire order is rolled back (no stock decrement).
+
+**Payment drivers** (`EVENTFLOW_PAYMENT_DRIVER`):
+
+| Driver | Description |
+| --- | --- |
+| `fake` | Instant success (default for local/demo) |
+| `razorpay` | Creates a Razorpay **test** order via API; requires `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` |
 
 ---
 

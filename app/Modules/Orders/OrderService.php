@@ -118,7 +118,11 @@ final class OrderService
                 ]);
             }
 
-            $order->update(['status' => OrderStatus::Confirmed]);
+            $order->update([
+                'status' => OrderStatus::Confirmed,
+                'payment_gateway' => config('eventflow.payments.driver', 'fake'),
+                'payment_transaction_id' => $payment->transactionId,
+            ]);
 
             return $order->refresh()->load(['items.product', 'user']);
         });

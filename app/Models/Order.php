@@ -28,6 +28,8 @@ class Order extends Model
         'subtotal',
         'tax',
         'total',
+        'payment_gateway',
+        'payment_transaction_id',
     ];
 
     /**

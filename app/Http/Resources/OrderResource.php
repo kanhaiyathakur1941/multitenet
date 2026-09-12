@@ -24,6 +24,8 @@ class OrderResource extends JsonResource
             'subtotal' => $this->subtotal,
             'tax' => $this->tax,
             'total' => $this->total,
+            'payment_gateway' => $this->payment_gateway,
+            'payment_transaction_id' => $this->payment_transaction_id,
             'user' => new UserResource($this->whenLoaded('user')),
             'items' => OrderItemResource::collection($this->whenLoaded('items')),
             'created_at' => $this->created_at?->toIso8601String(),

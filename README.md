@@ -2,14 +2,24 @@
 
 A production-style **multi-tenant Event & E-commerce SaaS** backend built with Laravel. EventFlow lets organizations manage events, sell merchandise, and handle customer orders — all within isolated tenant boundaries on a shared database.
 
+## Live demo
+
+| Resource | URL |
+| --- | --- |
+| **Admin panel** | https://multitenet-production-nbyekk.laravel.cloud/admin |
+| **API health** | https://multitenet-production-nbyekk.laravel.cloud/api/health |
+| **Client demo guide** | [docs/demo.md](docs/demo.md) |
+
+Login: `admin@alpha.eventflow.test` / `password`
+
 ## Features
 
 - **Multi-tenancy** — shared-database isolation via `tenant_id` and a global scope; cross-tenant access returns 404
 - **Role-based access** — Super Admin, Tenant Admin, Manager, Customer with policy-enforced permissions
 - **Events** — CRUD, publishing workflow, customer registration with capacity checks
-- **E-commerce** — product catalog, server-side order totals (tax + pricing), stock management, fake payment gateway
+- **E-commerce** — product catalog, server-side order totals (tax + pricing), stock management, fake or Razorpay test payments
 - **Dashboard** — tenant-scoped statistics for admins and managers
-- **Queues & notifications** — database queue with jobs for orders and event registrations
+- **Queues & notifications** — database queue with jobs; email notifications for orders and event registrations
 - **Security** — Sanctum API tokens, rate limiting, production-safe error responses
 - **Testing** — Pest feature tests covering auth, tenancy, policies, and business rules
 
@@ -85,6 +95,16 @@ Attach a **Laravel MySQL** database to the environment (Cloud injects `DB_*` aut
 - `https://YOUR-APP.laravel.cloud/api/health`
 - `https://YOUR-APP.laravel.cloud/admin` (login: `admin@alpha.eventflow.test` / `password`)
 
+**Queue worker (required for emails/notifications):**
+
+1. Open your environment on [cloud.laravel.com](https://cloud.laravel.com)
+2. Click the **App** cluster on the infrastructure canvas
+3. **Background processes** → **Add background process**
+4. Command: `php artisan queue:work --sleep=3 --tries=3 --timeout=90`
+5. Save and redeploy
+
+See [docs/demo.md](docs/demo.md) for Razorpay test mode, mail setup, and a full client walkthrough.
+
 ## Installation
 
 ```bash
@@ -147,8 +167,10 @@ Log in with any **Tenant Admin**, **Manager**, or **Super Admin** seeded user (p
 Notifications and background jobs use the database queue. Run a worker alongside the app:
 
 ```bash
-php artisan queue:work
+./bin/php artisan queue:work
 ```
+
+On **Laravel Cloud**, add a background process on the App cluster (see [docs/demo.md](docs/demo.md#queue-worker-on-laravel-cloud)).
 
 ## Running tests
 
@@ -247,7 +269,12 @@ tests/
 | Variable | Default | Description |
 | --- | --- | --- |
 | `EVENTFLOW_TAX_RATE` | `0.10` | Tax rate applied to orders (10%) |
-| `EVENTFLOW_SIMULATE_PAYMENT_FAILURE` | `false` | Force payment gateway to fail |
+| `EVENTFLOW_PAYMENT_DRIVER` | `fake` | `fake` or `razorpay` |
+| `EVENTFLOW_SIMULATE_PAYMENT_FAILURE` | `false` | Force fake payment gateway to fail |
+| `RAZORPAY_KEY_ID` | — | Razorpay test Key ID |
+| `RAZORPAY_KEY_SECRET` | — | Razorpay test Key Secret |
+| `RAZORPAY_CURRENCY` | `INR` | Razorpay order currency |
+| `EVENTFLOW_MAIL_NOTIFICATIONS` | `true` | Send order/event emails |
 | `EVENTFLOW_LOGIN_RATE_LIMIT` | `5` | Login attempts per minute |
 | `EVENTFLOW_API_RATE_LIMIT` | `60` | API requests per minute |
 
