@@ -7,13 +7,17 @@ namespace Database\Seeders;
 use App\Enums\EventStatus;
 use App\Enums\OrderStatus;
 use App\Enums\ProductStatus;
+use App\Enums\UserRole;
 use App\Models\Event;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class DemoDataSeeder extends Seeder
 {
@@ -49,26 +53,32 @@ class DemoDataSeeder extends Seeder
         );
 
         if (! User::query()->where('email', $adminEmail)->exists()) {
-            User::factory()->tenantAdmin()->for($tenant)->create([
-                'name' => "{$name} Admin",
-                'email' => $adminEmail,
-            ]);
+            $this->createUser(
+                name: "{$name} Admin",
+                email: $adminEmail,
+                role: UserRole::TenantAdmin,
+                tenant: $tenant,
+            );
         }
 
         if (! User::query()->where('email', $managerEmail)->exists()) {
-            User::factory()->manager()->for($tenant)->create([
-                'name' => "{$name} Manager",
-                'email' => $managerEmail,
-            ]);
+            $this->createUser(
+                name: "{$name} Manager",
+                email: $managerEmail,
+                role: UserRole::Manager,
+                tenant: $tenant,
+            );
         }
 
         $manager = User::query()->where('email', $managerEmail)->firstOrFail();
 
         if (! User::query()->where('email', $customerEmail)->exists()) {
-            $customer = User::factory()->customer()->for($tenant)->create([
-                'name' => "{$name} Customer",
-                'email' => $customerEmail,
-            ]);
+            $customer = $this->createUser(
+                name: "{$name} Customer",
+                email: $customerEmail,
+                role: UserRole::Customer,
+                tenant: $tenant,
+            );
         } else {
             $customer = User::query()->where('email', $customerEmail)->firstOrFail();
         }
@@ -77,24 +87,8 @@ class DemoDataSeeder extends Seeder
             return;
         }
 
-        $events = Event::factory()
-            ->count(5)
-            ->for($tenant)
-            ->for($manager, 'creator')
-            ->sequence(
-                ['status' => EventStatus::Published],
-                ['status' => EventStatus::Published],
-                ['status' => EventStatus::Draft],
-                ['status' => EventStatus::Published],
-                ['status' => EventStatus::Completed],
-            )
-            ->create();
-
-        $products = Product::factory()
-            ->count(10)
-            ->for($tenant)
-            ->active()
-            ->create();
+        $this->seedEvents($tenant, $manager);
+        $products = $this->seedProducts($tenant);
 
         $featuredProduct = $products->first();
         $subtotal = round((float) $featuredProduct->price * 2, 2);
@@ -118,13 +112,79 @@ class DemoDataSeeder extends Seeder
         ]);
 
         $featuredProduct->decrement('stock', 2);
+    }
 
-        Event::query()
-            ->whereKey($events->take(3)->pluck('id'))
-            ->update(['status' => EventStatus::Published]);
+    private function createUser(
+        string $name,
+        string $email,
+        UserRole $role,
+        ?Tenant $tenant = null,
+    ): User {
+        return User::query()->create([
+            'name' => $name,
+            'email' => $email,
+            'password' => 'password',
+            'email_verified_at' => now(),
+            'role_id' => Role::query()->where('slug', $role->value)->value('id'),
+            'tenant_id' => $tenant?->id,
+        ]);
+    }
 
-        Product::query()
-            ->whereKey($products->take(8)->pluck('id'))
-            ->update(['status' => ProductStatus::Active]);
+    private function seedEvents(Tenant $tenant, User $manager): void
+    {
+        $events = [
+            ['title' => 'Annual Summit', 'status' => EventStatus::Published],
+            ['title' => 'Community Meetup', 'status' => EventStatus::Published],
+            ['title' => 'Workshop Series', 'status' => EventStatus::Draft],
+            ['title' => 'Product Launch', 'status' => EventStatus::Published],
+            ['title' => 'Year End Gala', 'status' => EventStatus::Completed],
+        ];
+
+        foreach ($events as $index => $event) {
+            $start = now()->addWeeks($index + 1);
+
+            Event::query()->create([
+                'tenant_id' => $tenant->id,
+                'created_by' => $manager->id,
+                'title' => $event['title'],
+                'description' => "Demo event: {$event['title']}",
+                'location' => 'Main Hall',
+                'start_date' => $start,
+                'end_date' => $start->copy()->addHours(3),
+                'capacity' => 100,
+                'status' => $event['status'],
+            ]);
+        }
+    }
+
+    /**
+     * @return Collection<int, Product>
+     */
+    private function seedProducts(Tenant $tenant): Collection
+    {
+        $products = [
+            ['name' => 'Event T-Shirt', 'price' => 24.99, 'stock' => 50],
+            ['name' => 'Branded Cap', 'price' => 18.50, 'stock' => 40],
+            ['name' => 'Conference Mug', 'price' => 12.00, 'stock' => 60],
+            ['name' => 'Sticker Pack', 'price' => 5.99, 'stock' => 100],
+            ['name' => 'Notebook Set', 'price' => 15.00, 'stock' => 35],
+            ['name' => 'Water Bottle', 'price' => 22.00, 'stock' => 45],
+            ['name' => 'Tote Bag', 'price' => 19.99, 'stock' => 30],
+            ['name' => 'Lanyard', 'price' => 4.50, 'stock' => 80],
+            ['name' => 'Hoodie', 'price' => 49.99, 'stock' => 25],
+            ['name' => 'Pin Badge', 'price' => 3.99, 'stock' => 120],
+        ];
+
+        return collect($products)->map(function (array $product, int $index) use ($tenant): Product {
+            return Product::query()->create([
+                'tenant_id' => $tenant->id,
+                'name' => $product['name'],
+                'description' => "Demo merchandise: {$product['name']}",
+                'sku' => strtoupper(Str::slug($tenant->slug, '')).str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT),
+                'price' => $product['price'],
+                'stock' => $product['stock'],
+                'status' => ProductStatus::Active,
+            ]);
+        });
     }
 }
