@@ -8,6 +8,7 @@ use App\Modules\Orders\FakePaymentGateway;
 use App\Modules\Orders\PaymentGatewayInterface;
 use App\Modules\Orders\RazorpayPaymentGateway;
 use App\Shared\CurrentTenant;
+use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -34,6 +35,14 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Model::preventLazyLoading(! $this->app->isProduction());
+
+        Authenticate::redirectUsing(function (Request $request): string {
+            if ($request->is('admin', 'admin/*')) {
+                return url('/admin/login');
+            }
+
+            return route('portal.login');
+        });
 
         $this->configureRateLimiting();
     }

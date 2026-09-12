@@ -72,16 +72,16 @@ class DemoDataSeeder extends Seeder
 
         $manager = User::query()->where('email', $managerEmail)->firstOrFail();
 
-        if (! User::query()->where('email', $customerEmail)->exists()) {
-            $customer = $this->createUser(
-                name: "{$name} Customer",
-                email: $customerEmail,
-                role: UserRole::Customer,
-                tenant: $tenant,
-            );
-        } else {
-            $customer = User::query()->where('email', $customerEmail)->firstOrFail();
-        }
+        $customer = User::query()->updateOrCreate(
+            ['email' => $customerEmail],
+            [
+                'name' => config('eventflow.demo.customer_name', 'Demo Customer'),
+                'password' => 'password',
+                'email_verified_at' => now(),
+                'role_id' => Role::query()->where('slug', UserRole::Customer->value)->value('id'),
+                'tenant_id' => $tenant->id,
+            ],
+        );
 
         $this->seedEvents($tenant, $manager);
         $products = $this->seedProducts($tenant);

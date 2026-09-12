@@ -6,17 +6,14 @@ namespace App\Modules\Notifications;
 
 use App\Models\EventRegistration;
 use App\Modules\Notifications\Concerns\UsesEventFlowChannels;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class EventRegistrationNotification extends Notification implements ShouldQueue
+class EventRegistrationNotification extends Notification
 {
-    use Queueable;
     use UsesEventFlowChannels;
 
-    public function __construct(public EventRegistration $registration) {}
+    public function __construct(public int $registrationId) {}
 
     /**
      * @return list<string|class-string>
@@ -31,17 +28,20 @@ class EventRegistrationNotification extends Notification implements ShouldQueue
      */
     public function toArray(object $notifiable): array
     {
+        $registration = $this->registration();
+
         return [
             'type' => 'event_registration',
-            'event_id' => $this->registration->event_id,
-            'event_title' => $this->registration->event?->title,
-            'message' => "You are registered for {$this->registration->event?->title}.",
+            'event_id' => $registration->event_id,
+            'event_title' => $registration->event?->title,
+            'message' => "You are registered for {$registration->event?->title}.",
         ];
     }
 
     public function toMail(object $notifiable): MailMessage
     {
-        $eventTitle = $this->registration->event?->title ?? 'your event';
+        $registration = $this->registration();
+        $eventTitle = $registration->event?->title ?? 'your event';
 
         return (new MailMessage)
             ->subject('Event registration confirmed — EventFlow')
@@ -52,6 +52,16 @@ class EventRegistrationNotification extends Notification implements ShouldQueue
 
     public function toLog(object $notifiable): string
     {
-        return "User {$notifiable->email} registered for event #{$this->registration->event_id}.";
+        $registration = $this->registration();
+
+        return "User {$notifiable->email} registered for event #{$registration->event_id}.";
+    }
+
+    private function registration(): EventRegistration
+    {
+        return EventRegistration::query()
+            ->withoutTenant()
+            ->with(['event' => fn ($query) => $query->withoutTenant()])
+            ->findOrFail($this->registrationId);
     }
 }

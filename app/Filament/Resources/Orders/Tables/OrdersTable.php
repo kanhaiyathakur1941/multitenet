@@ -34,6 +34,13 @@ class OrdersTable
                 TextColumn::make('total')
                     ->money()
                     ->sortable(),
+                TextColumn::make('payment_gateway')
+                    ->label('Gateway')
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('payment_transaction_id')
+                    ->label('Payment ID')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->limit(20),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable(),

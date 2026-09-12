@@ -21,7 +21,7 @@ class OrderCreatedJob implements ShouldQueue
     {
         $order = Order::query()->withoutTenant()->with('user')->findOrFail($this->orderId);
 
-        $order->user->notify(new OrderCreatedNotification($order));
+        $order->user->notify(new OrderCreatedNotification($order->id));
     }
 
     public function failed(?Throwable $exception): void

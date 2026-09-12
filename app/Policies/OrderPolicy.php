@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
+use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Models\User;
 
@@ -26,5 +27,13 @@ class OrderPolicy
     public function create(User $user): bool
     {
         return $user->isCustomer();
+    }
+
+    public function pay(User $user, Order $order): bool
+    {
+        return $user->isCustomer()
+            && $order->user_id === $user->id
+            && $order->status === OrderStatus::Pending
+            && $order->payment_gateway === 'razorpay';
     }
 }

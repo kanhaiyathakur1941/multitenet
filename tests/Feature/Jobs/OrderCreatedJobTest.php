@@ -2,6 +2,10 @@
 
 use App\Jobs\OrderCreatedJob;
 use App\Models\Order;
+
+beforeEach(function () {
+    config(['eventflow.payments.driver' => 'fake']);
+});
 use App\Models\Product;
 use App\Models\Tenant;
 use App\Models\User;

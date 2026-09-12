@@ -27,7 +27,7 @@ class EventRegistrationJob implements ShouldQueue
             ])
             ->findOrFail($this->registrationId);
 
-        $registration->user->notify(new EventRegistrationNotification($registration));
+        $registration->user->notify(new EventRegistrationNotification($registration->id));
     }
 
     public function failed(?Throwable $exception): void

@@ -35,6 +35,18 @@ class OrderForm
                 Select::make('status')
                     ->options(OrderStatus::class)
                     ->required(),
+                TextInput::make('payment_gateway')
+                    ->label('Payment gateway')
+                    ->disabled()
+                    ->dehydrated(false),
+                TextInput::make('razorpay_order_id')
+                    ->label('Razorpay order ID')
+                    ->disabled()
+                    ->dehydrated(false),
+                TextInput::make('payment_transaction_id')
+                    ->label('Payment transaction ID')
+                    ->disabled()
+                    ->dehydrated(false),
             ]);
     }
 }

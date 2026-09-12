@@ -34,15 +34,24 @@ final class SetCurrentTenant
         $user->loadMissing(['tenant', 'role']);
 
         if ($user->tenant_id === null || $user->tenant === null) {
-            return ApiResponse::error('Tenant context is required.', 403);
+            return $this->deny($request, 'Tenant context is required.');
         }
 
         if (! $user->tenant->is_active) {
-            return ApiResponse::error('This tenant is inactive.', 403);
+            return $this->deny($request, 'This tenant is inactive.');
         }
 
         $this->currentTenant->set($user->tenant);
 
         return $next($request);
+    }
+
+    private function deny(Request $request, string $message): Response
+    {
+        if ($request->is('api/*') || $request->expectsJson()) {
+            return ApiResponse::error($message, 403);
+        }
+
+        abort(403, $message);
     }
 }

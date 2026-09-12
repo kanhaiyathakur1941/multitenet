@@ -24,7 +24,7 @@ class OrderStatusChangedJob implements ShouldQueue
     {
         $order = Order::query()->withoutTenant()->with('user')->findOrFail($this->orderId);
 
-        $order->user->notify(new OrderStatusChangedNotification($order, $this->previousStatus));
+        $order->user->notify(new OrderStatusChangedNotification($order->id, $this->previousStatus));
     }
 
     public function failed(?Throwable $exception): void

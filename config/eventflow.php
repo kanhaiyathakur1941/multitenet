@@ -4,6 +4,12 @@ return [
 
     'tax_rate' => (float) env('EVENTFLOW_TAX_RATE', 0.10),
 
+    'demo' => [
+        'customer_name' => env('EVENTFLOW_DEMO_CUSTOMER_NAME', 'Demo Customer'),
+        'customer_email' => env('EVENTFLOW_DEMO_CUSTOMER_EMAIL', 'customer@eventflow.test'),
+        'customer_phone' => env('EVENTFLOW_DEMO_CUSTOMER_PHONE', '9999999999'),
+    ],
+
     'payments' => [
         'driver' => env('EVENTFLOW_PAYMENT_DRIVER', 'fake'),
         'simulate_failure' => (bool) env('EVENTFLOW_SIMULATE_PAYMENT_FAILURE', false),

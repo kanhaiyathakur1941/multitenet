@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Notifications\Concerns;
 
 use App\Modules\Notifications\Channels\LogNotificationChannel;
+use App\Modules\Notifications\Channels\SafeMailNotificationChannel;
 
 trait UsesEventFlowChannels
 {
@@ -16,7 +17,7 @@ trait UsesEventFlowChannels
         $channels = ['database', LogNotificationChannel::class];
 
         if (config('eventflow.notifications.mail_enabled')) {
-            $channels[] = 'mail';
+            $channels[] = SafeMailNotificationChannel::class;
         }
 
         return $channels;

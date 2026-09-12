@@ -8,6 +8,7 @@ uses(TestCase::class, RefreshDatabase::class);
 use App\Models\Tenant;
 use App\Models\User;
 use App\Modules\Orders\RazorpayPaymentGateway;
+use App\Modules\Orders\RazorpayService;
 use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
@@ -31,7 +32,7 @@ it('creates a razorpay test order and returns the transaction id', function () {
     $customer = User::factory()->customer()->for($tenant)->create();
     $order = Order::factory()->for($tenant)->for($customer)->create(['total' => 22.00]);
 
-    $result = (new RazorpayPaymentGateway)->charge($order, 22.00);
+    $result = (new RazorpayPaymentGateway(new RazorpayService))->charge($order, 22.00);
 
     expect($result->successful)->toBeTrue()
         ->and($result->transactionId)->toBe('order_test_abc123');
@@ -51,7 +52,7 @@ it('returns a failure when razorpay credentials are missing', function () {
 
     $order = Order::factory()->create();
 
-    $result = (new RazorpayPaymentGateway)->charge($order, 10.00);
+    $result = (new RazorpayPaymentGateway(new RazorpayService))->charge($order, 10.00);
 
     expect($result->successful)->toBeFalse()
         ->and($result->message)->toBe('Razorpay credentials are not configured.');
@@ -66,7 +67,7 @@ it('returns a failure when razorpay api responds with an error', function () {
 
     $order = Order::factory()->create();
 
-    $result = (new RazorpayPaymentGateway)->charge($order, 10.00);
+    $result = (new RazorpayPaymentGateway(new RazorpayService))->charge($order, 10.00);
 
     expect($result->successful)->toBeFalse()
         ->and($result->message)->toBe('Authentication failed');

@@ -6,17 +6,21 @@ A production-style **multi-tenant Event & E-commerce SaaS** backend built with L
 
 | Resource | URL |
 | --- | --- |
+| **Customer login** | https://multitenet-production-nbyekk.laravel.cloud/ |
+| **Customer portal** | https://multitenet-production-nbyekk.laravel.cloud/portal |
 | **Admin panel** | https://multitenet-production-nbyekk.laravel.cloud/admin |
 | **API health** | https://multitenet-production-nbyekk.laravel.cloud/api/health |
 | **Client demo guide** | [docs/demo.md](docs/demo.md) |
 
-Login: `admin@alpha.eventflow.test` / `password`
+Customer login: `customer@eventflow.test` / `password`  
+Admin login: `admin@alpha.eventflow.test` / `password`
 
 ## Features
 
 - **Multi-tenancy** — shared-database isolation via `tenant_id` and a global scope; cross-tenant access returns 404
 - **Role-based access** — Super Admin, Tenant Admin, Manager, Customer with policy-enforced permissions
 - **Events** — CRUD, publishing workflow, customer registration with capacity checks
+- **Customer portal** — Blade web UI at `/` (login) and `/portal` (dashboard, events, shop, cart, Razorpay checkout)
 - **E-commerce** — product catalog, server-side order totals (tax + pricing), stock management, fake or Razorpay test payments
 - **Dashboard** — tenant-scoped statistics for admins and managers
 - **Queues & notifications** — database queue with jobs; email notifications for orders and event registrations
@@ -276,7 +280,9 @@ tests/
 | `RAZORPAY_KEY_ID` | — | Razorpay test Key ID |
 | `RAZORPAY_KEY_SECRET` | — | Razorpay test Key Secret |
 | `RAZORPAY_CURRENCY` | `INR` | Razorpay order currency |
-| `EVENTFLOW_MAIL_NOTIFICATIONS` | `true` | Send order/event emails |
+| `EVENTFLOW_MAIL_NOTIFICATIONS` | `true` | Send order/event emails to the customer’s address |
+| `EVENTFLOW_DEMO_CUSTOMER_EMAIL` | `customer@eventflow.test` | Prefilled portal login / Razorpay demo email |
+| `EVENTFLOW_DEMO_CUSTOMER_PHONE` | `9999999999` | Dummy phone for Razorpay checkout prefill |
 | `EVENTFLOW_LOGIN_RATE_LIMIT` | `5` | Login attempts per minute |
 | `EVENTFLOW_API_RATE_LIMIT` | `60` | API requests per minute |
 

@@ -30,6 +30,7 @@ class Order extends Model
         'total',
         'payment_gateway',
         'payment_transaction_id',
+        'razorpay_order_id',
     ];
 
     /**

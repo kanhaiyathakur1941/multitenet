@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureCustomer;
 use App\Http\Middleware\SetCurrentTenant;
 use App\Shared\Exceptions\ApiExceptionRenderer;
 use Illuminate\Foundation\Application;
@@ -18,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'tenant' => SetCurrentTenant::class,
+            'customer' => EnsureCustomer::class,
         ]);
 
         $middleware->throttleApi('api');

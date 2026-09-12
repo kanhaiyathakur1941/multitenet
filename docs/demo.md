@@ -6,6 +6,8 @@ Use this guide to explore the deployed EventFlow application.
 
 | Resource | URL |
 | --- | --- |
+| **Customer login** | https://multitenet-production-nbyekk.laravel.cloud/ |
+| **Customer portal** | https://multitenet-production-nbyekk.laravel.cloud/portal |
 | **Admin panel** | https://multitenet-production-nbyekk.laravel.cloud/admin |
 | **API health** | https://multitenet-production-nbyekk.laravel.cloud/api/health |
 | **API base** | https://multitenet-production-nbyekk.laravel.cloud/api |
@@ -22,19 +24,25 @@ All accounts use password: **`password`**
 | `admin@alpha.eventflow.test` | Tenant Admin | Events, products, orders, users |
 | `manager@alpha.eventflow.test` | Manager | Events, view products, orders |
 | `superadmin@eventflow.test` | Super Admin | All tenants |
-| `customer@eventflow.test` | Customer | API only (no admin access) |
+| `customer@eventflow.test` | Customer | Customer portal — events, shop, cart, orders |
 
 ---
 
 ## Quick walkthrough (5 minutes)
 
-### 1. Admin panel
+### 1. Customer portal (Blade)
+
+1. Open https://multitenet-production-nbyekk.laravel.cloud/
+2. Log in as `customer@eventflow.test` / `password`
+3. Browse **Events**, register for an event, shop products, add to cart, and place an order
+
+### 2. Admin panel
 
 1. Open https://multitenet-production-nbyekk.laravel.cloud/admin
 2. Log in as `admin@alpha.eventflow.test` / `password`
 3. Browse **Events**, **Products**, and **Orders**
 
-### 2. API health check
+### 3. API health check
 
 ```bash
 curl https://multitenet-production-nbyekk.laravel.cloud/api/health
@@ -46,7 +54,7 @@ Expected:
 {"success":true,"message":"EventFlow API is running.","data":{"status":"ok"}}
 ```
 
-### 3. API login and place an order
+### 4. API login and place an order
 
 ```bash
 # Login
@@ -94,13 +102,34 @@ To enable **Razorpay test mode** on Laravel Cloud:
 
 3. Redeploy.
 
-When a customer places an order via API, EventFlow creates a Razorpay test order server-side and stores the `payment_transaction_id` on the order.
+### Customer portal checkout
+
+1. Sign in at `/` as `customer@eventflow.test` / `password` (redirects to `/portal` after login).
+2. Add products to the cart and click **Pay with Razorpay**.
+3. Complete payment in the Razorpay modal using a [test card](https://razorpay.com/docs/payments/payments/test-card-upi-details/) (e.g. `4111 1111 1111 1111`, any future expiry, any CVV).
+4. After success you are redirected to the order page with `payment_transaction_id` set.
+
+If you close the Razorpay modal or click **Cancel payment**, the pending order is cancelled and product stock is restored.
+
+Amounts are charged in `RAZORPAY_CURRENCY` (default INR). Product prices in the demo are treated as that currency when Razorpay is enabled.
+
+The REST API still uses the **fake** driver for instant orders. With `EVENTFLOW_PAYMENT_DRIVER=razorpay`, API order creation returns a validation error — use the portal checkout instead.
 
 ---
 
 ## Email notifications
 
-Order and event notifications are sent to **database**, **log**, and **email** (when enabled).
+When a customer places an order or registers for an event, EventFlow notifies the **customer account** (the email on that user — not the admin).
+
+Notifications are stored/sent via three channels:
+
+| Channel | Where to check |
+| --- | --- |
+| **Database** | `notifications` table (always saved when the queue job runs) |
+| **Log** | Laravel Cloud → **Logs** (search for `Order #` or `registered for event`) |
+| **Email** | Customer’s inbox — only if SMTP is configured and a queue worker is running |
+
+> Demo customer `customer@eventflow.test` is not a real mailbox. For a live email test, temporarily set that user’s email to a real address in the admin panel or via tinker.
 
 ### Laravel Cloud mail setup
 
@@ -171,6 +200,28 @@ Run alongside the app:
 | Beta Gatherings | `admin@beta.eventflow.test` |
 
 Each tenant only sees its own events, products, and orders. Cross-tenant access returns **404**.
+
+---
+
+## 5-minute review for HR / interviewer
+
+**What it is:** Multi-tenant SaaS demo — one Laravel app, multiple organizations (tenants), each with isolated events, products, and orders.
+
+**Try this (≈5 min):**
+
+1. **Customer experience** — https://multitenet-production-nbyekk.laravel.cloud/  
+   Login: `customer@eventflow.test` / `password` → browse events, add products to cart, place an order.
+
+2. **Admin experience** — https://multitenet-production-nbyekk.laravel.cloud/admin  
+   Login: `admin@alpha.eventflow.test` / `password` → view/update orders, manage events and products.
+
+3. **API** — https://multitenet-production-nbyekk.laravel.cloud/api/health  
+   Returns JSON confirming the API is live.
+
+4. **Code** — https://github.com/kanhaiyathakur1941/multitenet  
+   Laravel 12, Pest tests, Filament admin, Sanctum API, queue jobs, Razorpay test payments.
+
+**Highlights:** tenant isolation, role-based access, queued notifications, payment gateway abstraction (fake + Razorpay), deployed on Laravel Cloud.
 
 ---
 
